@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>ixigo TripRoom — multiplayer flight booking</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="stylesheet" href="styles/colors_and_type.css"/>
+<link rel="stylesheet" href="styles/triproom.css"/>
+<style>
+  html,body{margin:0;padding:0;background:#0E0F14;color:#fff;font-family:var(--font-sans);min-height:100vh}
+  body{
+    background:
+      radial-gradient(60% 50% at 80% 10%, rgba(252,121,13,0.18) 0%, transparent 60%),
+      radial-gradient(70% 60% at 15% 95%, rgba(107,77,236,0.22) 0%, transparent 60%),
+      #0B0C12;
+    background-attachment:fixed;
+  }
+  .stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 16px 80px;flex-direction:column;gap:20px}
+  .stage-head{max-width:402px;width:100%;color:#fff;text-align:left}
+  .stage-head .lbl{font:600 11px/1 var(--font-sans);letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.55)}
+  .stage-head h1{font:800 24px/28px var(--font-sans);margin:6px 0 4px;letter-spacing:-0.02em}
+  .stage-head p{font:400 13px/18px var(--font-sans);color:rgba(255,255,255,0.65);margin:0;max-width:380px}
+
+  /* Step rail */
+  .rail{display:flex;gap:6px;max-width:402px;width:100%;overflow-x:auto;padding:2px;margin-top:6px}
+  .rail::-webkit-scrollbar{display:none}
+  .rail button{
+    border:0;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);
+    font:600 11px/1 var(--font-sans);padding:8px 12px;border-radius:99px;cursor:pointer;white-space:nowrap;
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  .rail button.on{background:#fff;color:#111;border-color:transparent}
+  .rail button:hover:not(.on){background:rgba(255,255,255,0.1);color:#fff}
+
+  /* Device shadow / glow */
+  .device-wrap{position:relative}
+  .device-wrap::before{
+    content:"";position:absolute;inset:-30px;border-radius:60px;z-index:-1;
+    background:radial-gradient(50% 50% at 50% 50%, rgba(255,255,255,0.06) 0%, transparent 70%);
+  }
+
+  /* Footer info */
+  .footer-note{font:400 11px/16px var(--font-sans);color:rgba(255,255,255,0.4);text-align:center;max-width:402px}
+  .footer-note kbd{background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;font:600 10px/1 var(--font-sans);color:rgba(255,255,255,0.7)}
+
+  /* Tweaks panel overrides */
+  .twk-panel{font-family:var(--font-sans) !important}
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- TWEAK DEFAULTS — host rewrites this on edit -->
+  <script>
+    window.__TR_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "groupSize": 5,
+      "aiMode": "hero",
+      "voteState": "consensus",
+      "startStep": "onboard"
+    }/*EDITMODE-END*/;
+  </script>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- iOS frame + tweaks panel -->
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+
+  <!-- Data + shared primitives -->
+  <script src="src/data.js"></script>
+  <script type="text/babel" src="src/common.jsx"></script>
+
+  <!-- Screens -->
+  <script type="text/babel" src="src/screens-1.jsx"></script>
+  <script type="text/babel" src="src/screens-2.jsx"></script>
+  <script type="text/babel" src="src/screens-3.jsx"></script>
+
+  <!-- Main app -->
+  <script type="text/babel" data-presets="react">
+  const { useState: useStateApp, useEffect: useEffectApp, useMemo: useMemoApp } = React;
+
+  const STEPS = [
+    { id:"onboard",  label:"Onboarding" },
+    { id:"create",   label:"Create room" },
+    { id:"invite",   label:"Invite friends" },
+    { id:"room",     label:"Shared discovery" },
+    { id:"lock",     label:"Fare lock moment" },
+    { id:"booking",  label:"Coordinated booking" },
+    { id:"trip",     label:"Post-booking" },
+    { id:"ledger",   label:"Trip ledger" },
+  ];
+
+  function App(){
+    const [t, setT] = useTweaks(window.__TR_DEFAULTS);
+    const [step, setStep] = useStateApp(window.__TR_DEFAULTS.startStep || "room");
+    const [showNudges, setShowNudges] = useStateApp(false);
+    const [splitPayMode, setSplitPayMode] = useStateApp("split");
+    const [fareTimer, setFareTimer] = useStateApp("29:58");
+
+    // Trim members to group size
+    const members = useMemoApp(()=>TR_DATA.members.slice(0, t.groupSize), [t.groupSize]);
+    const trip = TR_DATA.trip;
+    const flights = TR_DATA.flights;
+    const lockedFlight = flights[0];
+
+    // Fake countdown
+    useEffectApp(()=>{
+      let s = 29*60+58;
+      const id = setInterval(()=>{
+        s = Math.max(0, s-1);
+        const m = Math.floor(s/60), sec = s%60;
+        setFareTimer(`${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`);
+      }, 1000);
+      return ()=>clearInterval(id);
+    }, []);
+
+    // Sync step → tweak so reload remembers position
+    useEffectApp(()=>{ setT("startStep", step); }, [step]);
+
+    // Screen renderer
+    const screen = (() => {
+      switch(step){
+        case "onboard":
+          return <ScreenOnboarding members={members} onCreate={()=>setStep("create")}/>;
+        case "create":
+          return <ScreenCreate trip={trip} onBack={()=>setStep("onboard")} onCreated={()=>setStep("invite")}/>;
+        case "invite":
+          return <ScreenInvite trip={trip} members={members} onSkip={()=>setStep("room")} onContinue={()=>setStep("room")}/>;
+        case "room":
+          return <ScreenRoom
+            trip={trip} members={members} flights={flights}
+            reactions={TR_DATA.reactions}
+            aiMode={t.aiMode} voteState={t.voteState}
+            lockedFlightId={null} fareTimer={fareTimer}
+            onSelectFlight={()=>setStep("lock")}
+            onLockFare={()=>setStep("lock")}
+            onOpenLedger={()=>setStep("ledger")}
+            onOpenNudges={()=>setShowNudges(true)}
+          />;
+        case "lock":
+          return <FareLockMoment onDone={()=>setStep("booking")}/>;
+        case "booking":
+          return <ScreenBooking
+            trip={trip} members={members} flight={lockedFlight}
+            fareTimer={fareTimer}
+            splitPayMode={splitPayMode} setSplitPayMode={setSplitPayMode}
+            onClose={()=>setStep("room")}
+            onConfirm={()=>setStep("trip")}
+          />;
+        case "trip":
+          return <ScreenPostBooking trip={trip} members={members} flight={lockedFlight} onOpenLedger={()=>setStep("ledger")}/>;
+        case "ledger":
+          return <ScreenLedger members={members} ledger={TR_DATA.ledger} onClose={()=>setStep("trip")}/>;
+        default: return null;
+      }
+    })();
+
+    const currentLabel = (STEPS.find(s=>s.id===step) || {}).label || "—";
+
+    return (
+      <div className="stage">
+        <div className="stage-head">
+          <div className="lbl">ixigo TripRoom · interactive prototype</div>
+          <h1>Multiplayer travel booking</h1>
+          <p>Plan together, book together, fly together. Tap through the flow below — it's a fully interactive iOS prototype with live cursors, AI consensus, group fare freeze and a Splitwise-style ledger.</p>
+        </div>
+
+        <div className="rail">
+          {STEPS.map(s =>
+            <button key={s.id} className={step===s.id?"on":""} onClick={()=>setStep(s.id)}>{s.label}</button>
+          )}
+        </div>
+
+        <div className="device-wrap">
+          <IOSDevice width={402} height={874} dark={false} bare>
+            <div style={{position:"absolute",inset:0,paddingTop:50,boxSizing:"border-box",overflow:"hidden",borderRadius:"inherit",background:"var(--n-50)",color:"var(--text-primary)"}}>
+              {screen}
+              {showNudges && <ScreenNudges members={members} nudges={TR_DATA.nudges} onClose={()=>setShowNudges(false)}/>}
+            </div>
+          </IOSDevice>
+        </div>
+
+        <div className="footer-note">
+          Currently showing: <strong style={{color:"rgba(255,255,255,0.75)"}}>{currentLabel}</strong> · Use the rail above to jump between steps. Tap "Tweaks" in the toolbar to change group size, AI mode and voting state.
+        </div>
+
+        {/* TWEAKS PANEL */}
+        <TweaksPanel title="TripRoom tweaks">
+          <TweakSection label="Group">
+            <TweakSlider label="Group size" value={t.groupSize} min={2} max={8} step={1} unit=" members"
+              onChange={(v)=>setT("groupSize", v)}/>
+          </TweakSection>
+
+          <TweakSection label="AI prominence">
+            <TweakRadio label="Mode" value={t.aiMode}
+              options={[
+                {value:"subtle",   label:"Subtle"},
+                {value:"hero",     label:"Hero"},
+                {value:"copilot",  label:"Co-pilot"},
+              ]}
+              onChange={(v)=>setT("aiMode", v)}/>
+          </TweakSection>
+
+          <TweakSection label="Voting state">
+            <TweakRadio label="Stage" value={t.voteState}
+              options={[
+                {value:"early",      label:"Early"},
+                {value:"consensus",  label:"Consensus"},
+                {value:"locked",     label:"Locked"},
+              ]}
+              onChange={(v)=>setT("voteState", v)}/>
+          </TweakSection>
+
+          <TweakSection label="Jump to step">
+            <TweakSelect label="Screen" value={step}
+              options={STEPS.map(s=>({value:s.id,label:s.label}))}
+              onChange={(v)=>setStep(v)}/>
+          </TweakSection>
+        </TweaksPanel>
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  </script>
+</body>
+</html>

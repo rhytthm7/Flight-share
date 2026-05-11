@@ -1,0 +1,250 @@
+/* TripRoom — sub-brand layer on top of ixigo tokens */
+:root{
+  /* TripRoom violet — for collaborative / AI / multiplayer moments */
+  --tr-50:  #F2EEFF;
+  --tr-100: #E1D8FF;
+  --tr-200: #C5B4FE;
+  --tr-300: #A38DFC;
+  --tr-400: #8366F5;
+  --tr-500: #6B4DEC;
+  --tr-600: #5836D8;
+  --tr-700: #3F25A8;
+  --tr-800: #261463;
+  --tr-900: #14082E;
+
+  /* Member presence colors (live cursors / avatars) */
+  --m-1: #FC790D; /* host = ixigo orange */
+  --m-2: #6B4DEC; /* violet */
+  --m-3: #00A878; /* teal-green */
+  --m-4: #F26CB6; /* pink */
+  --m-5: #2D9CDB; /* blue */
+  --m-6: #FFBF00; /* amber */
+  --m-7: #FF5A5F; /* coral */
+  --m-8: #8E8AF2; /* lavender */
+
+  --gradient-triproom: linear-gradient(135deg,#FC790D 0%,#E85FB6 50%,#6B4DEC 100%);
+  --gradient-room-bg: radial-gradient(120% 70% at 0% 0%, #FFE0C9 0%, transparent 60%),
+                      radial-gradient(120% 80% at 100% 100%, #E1D8FF 0%, transparent 55%),
+                      linear-gradient(180deg,#FFF8F2 0%,#F5F2FF 100%);
+}
+
+/* TripRoom logotype mark */
+.tr-logo{
+  display:inline-flex;align-items:center;gap:6px;
+  font:700 14px/16px var(--font-sans);letter-spacing:-0.01em;
+}
+.tr-logo .ix{color:#0A0E14}
+.tr-logo .room{
+  background:var(--gradient-triproom);-webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.tr-logo .mark{
+  width:18px;height:18px;border-radius:6px;background:var(--gradient-triproom);
+  display:inline-flex;align-items:center;justify-content:center;color:#fff;font:800 11px/1 var(--font-sans);
+  box-shadow:0 2px 6px rgba(107,77,236,0.4);
+}
+
+/* Member avatar */
+.av{
+  width:28px;height:28px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;
+  color:#fff;font:700 11px/1 var(--font-sans);letter-spacing:0.01em;
+  box-shadow:0 0 0 2px #fff, 0 1px 2px rgba(0,0,0,0.12);position:relative;flex-shrink:0;
+}
+.av.sm{width:22px;height:22px;font-size:9px;box-shadow:0 0 0 1.5px #fff, 0 1px 2px rgba(0,0,0,0.12)}
+.av.lg{width:40px;height:40px;font-size:14px;box-shadow:0 0 0 2.5px #fff, 0 2px 6px rgba(0,0,0,0.14)}
+.av.xl{width:56px;height:56px;font-size:18px;box-shadow:0 0 0 3px #fff, 0 4px 12px rgba(0,0,0,0.16)}
+.av .dot{position:absolute;right:-1px;bottom:-1px;width:9px;height:9px;border-radius:99px;background:#00A854;box-shadow:0 0 0 1.5px #fff}
+.av.sm .dot{width:6px;height:6px;right:0;bottom:0}
+
+/* Avatar stack */
+.av-stack{display:inline-flex}
+.av-stack > *{margin-left:-8px}
+.av-stack > *:first-child{margin-left:0}
+.av-stack.sm > *{margin-left:-6px}
+
+/* Vote chip on flight card */
+.vote-chip{
+  display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px 0 4px;
+  border-radius:99px;background:#fff;border:1px solid var(--n-200);
+  font:700 11px/1 var(--font-sans);color:var(--text-secondary);box-shadow:var(--shadow-xs);
+}
+.vote-chip.voted{background:var(--tr-50);border-color:var(--tr-200);color:var(--tr-700)}
+
+/* Live presence cursor (pointed away from label) */
+.cursor{position:absolute;pointer-events:none;z-index:60;will-change:transform}
+.cursor svg{filter:drop-shadow(0 2px 4px rgba(0,0,0,0.18))}
+.cursor .lbl{
+  position:absolute;left:14px;top:14px;padding:3px 7px;border-radius:6px;color:#fff;
+  font:700 10px/1 var(--font-sans);white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.16);
+}
+
+/* Typing indicator */
+.typing{display:inline-flex;align-items:center;gap:3px}
+.typing i{width:4px;height:4px;border-radius:99px;background:currentColor;opacity:0.55;animation:typedot 1.1s infinite}
+.typing i:nth-child(2){animation-delay:0.15s}
+.typing i:nth-child(3){animation-delay:0.3s}
+@keyframes typedot{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-3px);opacity:1}}
+
+/* Reaction burst */
+@keyframes reactFloat{0%{transform:translateY(0) scale(0.6);opacity:0}20%{transform:translateY(-6px) scale(1.1);opacity:1}100%{transform:translateY(-32px) scale(0.9);opacity:0}}
+.react-burst{position:absolute;animation:reactFloat 1.6s ease-out forwards;pointer-events:none;font-size:18px}
+
+/* Lock pulse for fare-freeze */
+@keyframes lockpulse{0%,100%{box-shadow:0 0 0 0 rgba(107,77,236,0.45)}50%{box-shadow:0 0 0 8px rgba(107,77,236,0)}}
+.lock-pulse{animation:lockpulse 1.8s infinite}
+
+/* Vote bar (progress) */
+.vote-bar{height:6px;border-radius:99px;background:var(--n-100);overflow:hidden;position:relative}
+.vote-bar > i{display:block;height:100%;background:var(--gradient-triproom);border-radius:99px;transition:width .6s var(--ease-standard)}
+
+/* AI co-pilot card */
+.copilot{
+  position:relative;border-radius:18px;padding:14px;color:#fff;overflow:hidden;
+  background:linear-gradient(135deg,#3F25A8 0%,#6B4DEC 50%,#E85FB6 100%);
+  box-shadow:0 12px 28px rgba(107,77,236,0.34),inset 0 1px 0 rgba(255,255,255,0.18);
+}
+.copilot::before{
+  content:"";position:absolute;inset:-30%;background:radial-gradient(40% 40% at 70% 30%,rgba(255,255,255,0.32) 0%,transparent 70%);
+  pointer-events:none;
+}
+.copilot .ai-orb{
+  width:32px;height:32px;border-radius:999px;background:conic-gradient(from 220deg,#FC790D,#E85FB6,#6B4DEC,#00D4FF,#FC790D);
+  box-shadow:0 0 0 1.5px rgba(255,255,255,0.65),0 4px 12px rgba(0,0,0,0.2);
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.copilot .ai-orb::after{
+  content:"";width:12px;height:12px;border-radius:99px;background:rgba(255,255,255,0.95);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,0.05);
+}
+@keyframes orbspin{to{transform:rotate(360deg)}}
+.copilot .ai-orb{animation:orbspin 8s linear infinite}
+
+/* Subtle AI mode (less hero) */
+.copilot.subtle{background:#fff;color:var(--text-primary);border:1px solid var(--tr-200);box-shadow:var(--shadow-s)}
+.copilot.subtle::before{display:none}
+.copilot.subtle .ai-orb{box-shadow:0 0 0 1px rgba(107,77,236,0.3),0 2px 6px rgba(107,77,236,0.18)}
+
+/* Generic chip */
+.chip{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:99px;background:var(--n-50);color:var(--text-secondary);font:600 12px/1 var(--font-sans);border:1px solid var(--n-100);white-space:nowrap}
+.pill,.vote-chip,.room-tabs button{white-space:nowrap}
+.chip.brand{background:var(--o-50);color:var(--o-700);border-color:var(--o-200)}
+.chip.tr{background:var(--tr-50);color:var(--tr-700);border-color:var(--tr-200)}
+.chip.success{background:var(--g-50);color:var(--g-700);border-color:#B7E8CC}
+.chip.warn{background:var(--y-50);color:var(--y-700);border-color:#FFE9A3}
+
+/* Room badge / pill button */
+.pill{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;
+  background:#fff;border:1px solid var(--n-200);font:600 12px/1 var(--font-sans);color:var(--text-primary);
+  box-shadow:var(--shadow-xs);cursor:pointer;
+}
+
+/* Live indicator dot */
+.live-dot{width:7px;height:7px;border-radius:99px;background:#00A854;box-shadow:0 0 0 4px rgba(0,168,84,0.18);animation:livepulse 1.6s infinite}
+@keyframes livepulse{0%,100%{box-shadow:0 0 0 0 rgba(0,168,84,0.45)}50%{box-shadow:0 0 0 6px rgba(0,168,84,0)}}
+
+/* Tab nav inside room */
+.room-tabs{display:flex;gap:4px;padding:4px;background:#fff;border:1px solid var(--n-150);border-radius:99px;box-shadow:var(--shadow-xs)}
+.room-tabs button{flex:1;height:34px;border:0;border-radius:99px;background:transparent;font:600 12px/1 var(--font-sans);color:var(--text-tertiary);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.room-tabs button.on{background:var(--n-900);color:#fff}
+
+/* Floating "members in room" footer */
+.room-footer{
+  position:absolute;left:12px;right:12px;bottom:46px;z-index:30;
+  background:rgba(255,255,255,0.92);backdrop-filter:blur(18px) saturate(1.4);
+  -webkit-backdrop-filter:blur(18px) saturate(1.4);
+  border:1px solid rgba(0,0,0,0.06);border-radius:18px;padding:10px 12px;
+  display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.10);
+}
+
+/* Sheet for split-pay etc */
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;background:#fff;border-top-left-radius:24px;border-top-right-radius:24px;
+  padding:8px 16px 24px;box-shadow:0 -8px 32px rgba(0,0,0,0.16);z-index:80;animation:sheetUp .32s var(--ease-standard);
+}
+.sheet .handle{width:36px;height:4px;background:var(--n-200);border-radius:99px;margin:4px auto 14px}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+/* Scrim */
+.scrim{position:absolute;inset:0;background:rgba(10,14,20,0.5);backdrop-filter:blur(2px);z-index:75;animation:fade .25s var(--ease-standard)}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+
+/* Fare lock — full screen moment */
+.lock-stage{position:absolute;inset:-50px 0 0 0;background:var(--gradient-room-bg);z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.lock-orb{
+  width:140px;height:140px;border-radius:999px;background:var(--gradient-triproom);
+  display:flex;align-items:center;justify-content:center;color:#fff;
+  box-shadow:0 30px 60px rgba(107,77,236,0.4),inset 0 2px 0 rgba(255,255,255,0.32);
+  animation:orbpop .6s var(--ease-standard);
+}
+@keyframes orbpop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+
+/* Itinerary timeline dot */
+.tl-dot{width:14px;height:14px;border-radius:99px;background:#fff;border:3px solid var(--o-500);flex-shrink:0;margin-top:4px}
+.tl-dot.done{background:var(--o-500);border-color:var(--o-500)}
+.tl-line{width:2px;background:var(--n-150);flex:1;margin:4px auto -2px}
+
+/* Ledger row */
+.ledger-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--n-100)}
+.ledger-row:last-child{border-bottom:0}
+
+/* Nudge */
+.nudge{
+  display:flex;gap:10px;padding:12px;border-radius:14px;background:#fff;
+  border:1px solid var(--tr-100);box-shadow:var(--shadow-xs);
+}
+.nudge .ai-orb{width:24px;height:24px;border-radius:999px;background:conic-gradient(from 220deg,#FC790D,#E85FB6,#6B4DEC,#00D4FF,#FC790D);flex-shrink:0;animation:orbspin 8s linear infinite}
+
+/* Flight tile */
+.f-tile{
+  position:relative;background:#fff;border:1px solid var(--n-150);border-radius:18px;padding:14px;
+  box-shadow:var(--shadow-xs);transition:transform .15s var(--ease-standard),box-shadow .2s;
+}
+.f-tile.consensus{border-color:var(--tr-300);box-shadow:0 0 0 1px var(--tr-300),0 8px 24px rgba(107,77,236,0.16)}
+.f-tile.locked{border-color:var(--o-400);box-shadow:0 0 0 1.5px var(--o-400),0 10px 28px rgba(252,121,13,0.22)}
+.airline-fin{
+  width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font:800 11px/1 var(--font-sans);flex-shrink:0;
+}
+
+/* QR */
+.qr{
+  width:172px;height:172px;background:
+    radial-gradient(#0A0E14 16%, transparent 18%) 0 0 / 9px 9px,
+    radial-gradient(#0A0E14 16%, transparent 18%) 4.5px 4.5px / 9px 9px,
+    #fff;
+  border-radius:14px;padding:14px;box-sizing:border-box;position:relative;
+}
+.qr::before,.qr::after,.qr i{position:absolute;width:36px;height:36px;border:6px solid #0A0E14;border-radius:6px;background:#fff;content:""}
+.qr::before{top:8px;left:8px}
+.qr::after{top:8px;right:8px}
+.qr i{bottom:8px;left:8px}
+.qr .center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.qr .center span{background:#fff;padding:3px;border-radius:8px}
+
+/* Confetti / sparkles for booked moment */
+@keyframes sparkle{0%{transform:translateY(0) rotate(0);opacity:0}30%{opacity:1}100%{transform:translateY(-40px) rotate(160deg);opacity:0}}
+.sparkle{position:absolute;width:6px;height:6px;background:var(--o-500);border-radius:1px;animation:sparkle 1.4s ease-out forwards}
+
+/* Scrollable inner area */
+.scroll{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{display:none}
+
+/* Helpers */
+.row{display:flex;align-items:center}
+.col{display:flex;flex-direction:column}
+.gap-4{gap:4px}.gap-6{gap:6px}.gap-8{gap:8px}.gap-10{gap:10px}.gap-12{gap:12px}.gap-14{gap:14px}.gap-16{gap:16px}
+.flex1{flex:1}
+.tx-700{font-weight:700}.tx-600{font-weight:600}.tx-500{font-weight:500}
+.t-xs{font-size:11px;line-height:14px}
+.t-s{font-size:12px;line-height:16px}
+.t-m{font-size:14px;line-height:18px}
+.t-l{font-size:16px;line-height:20px}
+.t-xl{font-size:18px;line-height:22px}
+.t-2xl{font-size:22px;line-height:26px}
+.t-3xl{font-size:28px;line-height:32px}
+.muted{color:var(--text-tertiary)}
+.sec{color:var(--text-secondary)}
+.brand{color:var(--o-600)}
+.tr{color:var(--tr-600)}
+
+/* Press feedback */
+button:active:not(:disabled),.f-tile:active,.pressable:active{transform:scale(0.98)}
